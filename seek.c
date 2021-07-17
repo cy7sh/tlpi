@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 		printf("Usage: %s file {r<length>|R<length>|w<string>|s<offset>}...\n", argv[0]);
 		exit(EXIT_SUCCESS);
 	}
-	int fd = open(argv[1], O_RDWR | O_CREAT, S_IRUSR, S_IWUSR, S_IRGRP, S_IWGRP, S_IROTH); /* rw-rw-r */
+	int fd = open(argv[1], O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH); /* rw-rw-r */
 	if (fd == -1) {
 		perror("error opening file");
 		exit(EXIT_FAILURE);
@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
 					perror("malloc error");
 					exit(EXIT_FAILURE);
 				}
-				int fd;
 				ssize_t numRead = read(fd, buf, len);
 				if (numRead == -1) {
 					perror("read error");
@@ -43,7 +42,7 @@ int main(int argc, char *argv[])
 						if (argv[arg][0] == 'r') {
 							printf("%c", isprint((unsigned char) buf[j]) ? buf[j] : '?');
 						} else {
-							printf("%02x", (unsigned int) buf[j]);
+							printf("%02x ", (unsigned int) buf[j]);
 						}
 					}
 					printf("\n");
