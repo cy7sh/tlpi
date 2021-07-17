@@ -1,8 +1,9 @@
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 int main (int argc, char *argv[])
 {
@@ -30,7 +31,7 @@ int main (int argc, char *argv[])
 	}
 	/* transfer data untl EOF or error encounter */
 	ssize_t numRead;
-	char buf[1024];
+	char *buf = malloc(1024);
 	printf("copying data...\n");
 	while ((numRead = read(inputFd, buf, 1024)) > 0) {
 		if (write(outputFd, buf, numRead) != numRead) {
