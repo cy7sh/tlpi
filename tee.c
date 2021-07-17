@@ -10,12 +10,15 @@ int main(int argc, char* argv[])
 		exit(EXIT_FAILURE);
 	}
 	char *buf = malloc(1024);
-	int outputFd = open(argv[1], O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+	int outputFd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 	ssize_t numRead;
-	while ((numRead = read(1, buf, 1024)) > 0) {
+	while ((numRead = read(STDIN_FILENO, buf, 1024)) > 0) {
 		if (write(outputFd, buf, numRead) != numRead) {
-			perror("could not write the whole buffer");
+			perror("could not write to the file");
 			exit(EXIT_FAILURE);;
+		}
+		if (write(STDOUT_FILENO, buf, numRead) != numRead) {
+			perror("could not write to STDOUT");
 		}
 	}
 	if (close(outputFd == -1)) {
