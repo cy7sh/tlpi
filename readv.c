@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[])
 {
-	if (argc != 2 || strcmp(argv[1], "--help")) {
+	if (argc != 2 || (strcmp(argv[1], "--help") == 0)) {
 		printf("Usage: %s <file>\n", argv[0]);
 		exit(EXIT_FAILURE);	
 	}
@@ -32,6 +32,6 @@ int main(int argc, char *argv[])
 		perror("read error");
 		exit(EXIT_FAILURE);
 	}
-	printf("Requested bytes: %ld; Read bytes: %ld", (long) total, (long) numRead);
+	printf("Requested bytes: %ld; Read bytes: %ld\n", (long) total, (long) numRead);
 	exit(EXIT_SUCCESS);
 }
