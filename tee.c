@@ -6,7 +6,7 @@
 int main(int argc, char* argv[])
 {
 	int flag = getopt(argc, argv, "+a");
-	/* When there's no flag flag's bits are set to high. We want to prevent flags after filename*/
+	/* When there's no flag flag's bits are set to high. We want to prevent flags after filename */
 	if (argc < 2 || flag == '?' || (flag == 0xffffffff && argc > 2)) {
 		printf("Usage: %s [-a] <file>\n", argv[0]);
 		exit(EXIT_FAILURE);
