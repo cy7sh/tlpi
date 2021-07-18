@@ -50,12 +50,12 @@ int main(int argc, char *argv[])
 				free(buf);
 				break;
 			case 'w': ;
-				ssize_t numWrittern = write(fd, &argv[arg][1], strlen(&argv[arg][1]));
-				if (numWrittern == -1) {
+				ssize_t numWritten = write(fd, &argv[arg][1], strlen(&argv[arg][1]));
+				if (numWritten == -1) {
 					perror("write error");
 					exit(EXIT_FAILURE);
 				}
-				printf("%s: wrote %ld bytes\n", argv[arg], (long) numWrittern);
+				printf("%s: wrote %ld bytes\n", argv[arg], (long) numWritten);
 				break;
 			case 's':
 				errno = 0;
