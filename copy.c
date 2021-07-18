@@ -29,7 +29,7 @@ int main (int argc, char *argv[])
 		printf("error opening file %s: %s\n", argv[2], strerror(errno));
 		exit(1);
 	}
-	/* transfer data untl EOF or error encounter */
+	/* transfer data until EOF or error encounter */
 	ssize_t numRead;
 	char *buf = malloc(1024);
 	printf("copying data...\n");
