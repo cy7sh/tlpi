@@ -33,5 +33,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	printf("Requested bytes: %ld; Read bytes: %ld\n", (long) total, (long) numRead);
+	printf("x = %d\n", x);
+	printf("str = %s\n", str);
 	exit(EXIT_SUCCESS);
 }
