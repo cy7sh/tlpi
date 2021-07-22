@@ -11,9 +11,9 @@ void doJump(int nvar, int rvar, int vvar)
 
 int main(int argc, char *argv[])
 {
-	int nvar;
-	register int rvar;
-	volatile int vvar;
+	int nvar; // this might be in RAM or register (depends on compiler optimization)
+	register int rvar; // this will be in register
+	volatile int vvar; // this will be in RAM
 
 	nvar = 111;
 	rvar = 222;
