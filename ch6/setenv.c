@@ -1,11 +1,5 @@
 /* Exercise 6-4 */
 
-/* Implement setenv() and unsetenv() using getenv(), putenv(), and, where necessary,
- * code that directly modifies environ. Your version of unsetenv() should check to see
- * whether there are multiple definitions of an environment variable, and remove
- * them all (which is what the glibc version of unsetenv() does).
- */
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,19 +8,17 @@ extern char **environ;
 
 int setenv(const char *name, const char *value, int overwrite)
 {
+	// put this on heap so that it exists after this function returns
 	char *toPut = malloc(strlen(name) + strlen(value) + 2); // name + "=" + value + x00
 	toPut[0] = '\0';
 	strcat(toPut, name);
 	strcat(toPut, "=");
 	strcat(toPut, value);
-	printf("toput is %s\n", toPut);
 	if (getenv(name) != NULL && overwrite == 0) {
 		return 0;
 	}
 	if (putenv(toPut) != 0) {
 		return -1;
-	} else {
-		printf("after put: shell: %s, test: %s\n", getenv("SHELL"), getenv("test"));
 	}
 	return 0;
 }
@@ -44,36 +36,25 @@ int unsetenv(const char *name)
 				dp[0] = dp[1];
 				++dp;
 			}
-		} else {
-			return -1;
 		}
 	}
 	return 0;
 }
 
-void printenv()
-{
-	for (char **ep = environ; *ep != NULL; ++ep) {
-		puts(*ep);
-	}
-}
-
 int main()
 {
-	puts(getenv("SHELL"));
-	setenv("SHELL", "yo", 1);
-	setenv("test", "how does this work?", 1);
-//	printenv();
+	setenv("test1", "yo", 1);
+	setenv("test2", "how does this work?", 1);
 	printf("After setenv\n");
-	printf("SHELL: %s\n", getenv("SHELL"));
-	printf("test: %s\n", getenv("test"));
-//	if (unsetenv("SHELL") == -1) {
-//		printf("unset fail\n");
-//	}
-//	if (getenv("SHELL") == NULL) {
-//		printf("successfully unset\n");
-//	} else {
-//		puts(getenv("SHELL"));
-//	}
-//	puts(getenv("test"));
+	printf("test1: %s\n", getenv("test1"));
+	printf("test2: %s\n", getenv("test2"));
+	if (unsetenv("test1") == -1) {
+		printf("unset fail\n");
+	}
+	if (unsetenv("test2") == -1) {
+		printf("unset fail\n");
+	}
+	printf("After unsetenv\n");
+	printf("test1: %s\n", getenv("test1"));
+	printf("test2: %s\n", getenv("test2"));
 }
