@@ -9,19 +9,39 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define MAX_FREES 1000
+#define NEXT_FREE 0
+
+void *freeList[MAX_FREES];
+
 void *bmalloc(size_t size)
 {
 	void *programBreak = sbrk(size + sizeof(size_t));
-	printf("before wrote size %ld\n", *(size_t *) programBreak);
+	/* add metadata before the data segment giving the block form:
+	 * Length of block + Acutal data
+	 */
 	memcpy(programBreak, &size, sizeof(size_t));
-	printf("wrote size %ld\n", *(size_t *) programBreak);
+	/* return just the data segment hiding the metadata */
 	return programBreak + sizeof(size_t);
 }
 
 void bfree(void *ptr)
 {
-	size_t size = *(size_t *) (ptr - sizeof(size_t));
-	printf("size is %ld\n", size);
+	ptr = ptr - sizeof(size_t);
+	/* save pointer to free block in freeList */
+	freeList[NEXT_FREE] = ptr;
+	if (NEXT_FREE == 0)
+		return;
+	/* store address to previous block and next block in the block itself
+	 * giving the block form: Length of block + Pointer to previous block
+	 * + Pointer to next block + Remaining block
+	 */
+	memcpy(ptr + sizeof(size_t), (void *) freeList[NEXT_FREE-1], sizeof(void *));
+	/* we don't know what the next block will be yet */
+	memcpy(ptr + sizeof(size_t) + sizeof(void ()), (void *) NULL, sizeof(void *));
+	/* update the "next pointer" of previous block */
+	void *prevPtr = freeList[NEXT_FREE-1];
+	memcpy(prevPtr + sizeof(size_t) + sizeof(void ()), (void *) ptr, sizeof(void *));
 }
 
 int main()
