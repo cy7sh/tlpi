@@ -74,5 +74,5 @@ int main()
 	bfree(addr3);
 	bfree(addr4);
 	void *newAddr = bmalloc(2048);
-	printf("the new memory of size %zu is at %p\n", *(size_t *) newAddr - sizeof(size_t), newAddr);
+	printf("the new memory of size %zu is at %p\n", *(size_t *) (newAddr - sizeof(size_t)), newAddr);
 }
