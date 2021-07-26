@@ -51,6 +51,9 @@ void *bmalloc(size_t size)
 		for (int j=0; totalSize < (size + sizeof(size_t)) && j<NEXT_FREE; j++) {
 			/* on next loop find chainmate for this mate */
 			mate = findChainMate(mate);
+			if (mate == -1) {
+				break;
+			}
 			totalSize += *(size_t *) freeList[mate];
 			/* incase we use this block */
 			chain[j] = mate;
@@ -110,5 +113,6 @@ int main()
 	bfree(addr3);
 	bfree(addr4);
 	void *newAddr = bmalloc(2048);
-	printf("the new memory of size %zu is at %p\n", *(size_t *) (newAddr - sizeof(size_t)), newAddr);
+	if (newAddr != NULL)
+		printf("the new memory of size %zu is at %p\n", *(size_t *) (newAddr - sizeof(size_t)), newAddr);
 }
