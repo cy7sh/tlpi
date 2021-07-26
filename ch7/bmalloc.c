@@ -11,7 +11,7 @@
 
 #define MAX_FREES 1000
 
-size_t NEXT_FREE = 0;
+size_t NEXT_FREE = 0; /* at what index next free block should be added */
 void *freeList[MAX_FREES];
 
 void *bmalloc(size_t size)
@@ -35,6 +35,30 @@ void *bmalloc(size_t size)
 	NEXT_FREE = currentFree - 1;
 	memcpy(freeList[currentFree], &size, sizeof(size_t));
 	return freeList[currentFree] + sizeof(size_t);
+}
+
+/* finds a block in free list that can serially attach to the head (position=0) or tail (position=1) of another block, forming a chain */
+int findChainMate(int freeIndex, int position)
+{
+	if (position == 0) {
+		void *prevPtr = freeList[freeIndex] + sizeof(size_t);
+		void *nextPtr;
+		for (int i=0; i<NEXT_FREE; i++) {
+			nextPtr = freeList[i] + sizeof(size_t) + sizeof(void *);
+			if (nextPtr == prevPtr)
+				return i;
+		}
+	}
+	if (position == 1) {
+		void *nextPtr = freeList[freeIndex] + sizeof(size_t) + sizeof(void *);
+		void *prevPtr;
+		for (int i=0; i<NEXT_FREE; i++) {
+			prevPtr = freeList[i] + sizeof(size_t);
+			if (nextPtr == prevPtr)
+				return i;
+		}
+	}
+	return -1;
 }
 
 void bfree(void *ptr)
