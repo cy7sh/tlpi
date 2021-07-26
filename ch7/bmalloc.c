@@ -9,10 +9,23 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MAX_FREES 1000
+#define MAX_FREES 1000000
 
 size_t NEXT_FREE = 0; /* at what index next free block should be added */
 void *freeList[MAX_FREES];
+
+/* finds a block in free list that can serially attach to the head (position=0) or tail (position=1) of another block, forming a chain */
+int findChainMate(int freeIndex)
+{
+	void *nextPtr = freeList[freeIndex] + sizeof(size_t) + sizeof(void *);
+	void *prevPtr;
+	for (int i=0; i<NEXT_FREE; i++) {
+		prevPtr = freeList[i] + sizeof(size_t);
+		if (nextPtr == prevPtr)
+			return i;
+	}
+	return -1;
+}
 
 void *bmalloc(size_t size)
 {
@@ -26,39 +39,38 @@ void *bmalloc(size_t size)
 		/* return just the data segment hiding the metadata */
 		return programBreak + sizeof(size_t);
 	}
-	size_t currentFree = NEXT_FREE - 1;
-	size_t totalSize = 0;
-	for (; totalSize<(size + sizeof(size_t)); currentFree--) {
-		totalSize += *(size_t *) freeList[currentFree] + sizeof(size_t);
-		printf("totalSize is %zu\n", totalSize);
+	int totalSize;
+	int chain[NEXT_FREE-1];
+	chain[0] = -1;
+	/* loop through free list */
+	for (int i=0; i<NEXT_FREE; i++) {
+		totalSize = 0;
+		totalSize += *(size_t *) freeList[i];
+		int mate = i;
+		/* for each free block try to find a chain */
+		for (int j=0; totalSize < (size + sizeof(size_t)) && j<NEXT_FREE; j++) {
+			/* on next loop find chainmate for this mate */
+			mate = findChainMate(mate);
+			totalSize += *(size_t *) freeList[mate];
+			/* incase we use this block */
+			chain[j] = mate;
+			chain[j+1] = -1;
+		}
+		if (totalSize < (size + sizeof(size_t))) {
+			/* not using this chain */
+			chain[0] = -1;
+			continue;
+		} else
+			break;
 	}
-	NEXT_FREE = currentFree - 1;
-	memcpy(freeList[currentFree], &size, sizeof(size_t));
-	return freeList[currentFree] + sizeof(size_t);
-}
-
-/* finds a block in free list that can serially attach to the head (position=0) or tail (position=1) of another block, forming a chain */
-int findChainMate(int freeIndex, int position)
-{
-	if (position == 0) {
-		void *prevPtr = freeList[freeIndex] + sizeof(size_t);
-		void *nextPtr;
-		for (int i=0; i<NEXT_FREE; i++) {
-			nextPtr = freeList[i] + sizeof(size_t) + sizeof(void *);
-			if (nextPtr == prevPtr)
-				return i;
+	/* remove blocks we're using from free list */
+	for (int i=0; chain[i] != -1; i++) {
+		int index = chain[i];
+		for (int j=index; j<NEXT_FREE; j++) {
+			freeList[index] = freeList[index+1];
 		}
 	}
-	if (position == 1) {
-		void *nextPtr = freeList[freeIndex] + sizeof(size_t) + sizeof(void *);
-		void *prevPtr;
-		for (int i=0; i<NEXT_FREE; i++) {
-			prevPtr = freeList[i] + sizeof(size_t);
-			if (nextPtr == prevPtr)
-				return i;
-		}
-	}
-	return -1;
+	return NULL;
 }
 
 void bfree(void *ptr)
