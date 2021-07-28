@@ -1,0 +1,4 @@
+Is a process with the following user IDs privileged? Explain your answer.
+real=0 effective=1000 saved=1000 file-system=1000
+
+Not currently but because real UID is 0, effective UID can be upgraded to 0 with seteuid().
