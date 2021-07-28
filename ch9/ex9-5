@@ -1,0 +1,13 @@
+Repeat the previous exercise for a process executing a set-user-ID-root program,
+which has the following initial set of process credentials:
+
+real=X effective=0 saved=0
+
+a) Suspend and resume
+
+eid = geteuid();
+seteuid(getuid());
+seteuid(eid);
+
+b) Drop permanently
+setuid(getuid());
