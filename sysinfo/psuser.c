@@ -29,12 +29,10 @@ int main(int argc, char *argv[])
 
 	/* enumerate for directories in /proc */
 	for (struct dirent *rdir = readdir(dir); rdir != NULL; rdir = readdir(dir)) {
-//		printf("checking dir %s\n", rdir->d_name);
 		char *exess;
 		strtol(rdir->d_name, &exess, 10);
 		/* if the directory is not a PID directory */
 		if (exess[0] != '\0') {
-//			printf("not pid\n");
 			continue;
 		}
 		/* read stuff from status file */
@@ -48,21 +46,41 @@ int main(int argc, char *argv[])
 		/* the file might not exist now */
 		if (fd == -1)
 			continue;
-//		printf("current file %s\n", filename);
 		/* read from status file and check for match */
 		char buf[65536];
+		buf[65535] = '\0';
+		int match = 0;
 		/* i know readed is not a word */
-		for (int readed = read(fd, buf, 65535); readed > 0; readed = read(fd, buf, 65536)) {
-			buf[65535] = '\0';
+		for (int readed = read(fd, buf, 65535); readed > 0; readed = read(fd, buf, 65535)) {
 			char searchTerm[strlen("Uid:\t") + strlen(uidStr) + 2];
 			searchTerm[0] = '\0';
 			strcat(searchTerm, "Uid:\t");
 			strcat(searchTerm, uidStr);
-//			printf("searching for '%s'\n", searchTerm);
-//			printf("checking PID: %s\n", pid);
 			if (strstr(buf, searchTerm) == NULL) continue;
-			printf("PID: %s\n", pid);
+			printf("PID: %s", pid);
+			match = 1;
 			break;
 		}
+		if (match == 0)
+			continue;
+		/* find the name of the command this process is running */
+		lseek(fd, 0, SEEK_SET);
+		char name[1024];
+		for (int readed = read(fd, buf, 65536); readed > 0; readed = read(fd, buf, 65536)) {
+			for (int i=0; i<65536; i++) {
+				if (buf[i] != '\t')
+					continue;
+				int idx = 0;
+				for (int j=i+1; j<65536; j++) {
+					if (buf[j] == '\n')
+						break;
+					name[idx] = buf[j];
+					idx++;
+				}
+				name[idx] = '\0';
+				break;
+			}
+		}
+		printf(" Name: %s\n", name);
 	}
 }
