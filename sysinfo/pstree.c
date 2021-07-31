@@ -47,7 +47,6 @@ int main()
 		char name[1024];
 		char buf[65536];
 		buf[65535] = '\0';
-		int ppid;
 		for (int readed = read(fd, buf, 65536); readed > 0; readed = read(fd, buf, 65536)) {
 			/* find the name of the command this process is running */
 			for (int i=0; i<65536; i++) {
@@ -69,7 +68,6 @@ int main()
 				printf("could not find ppid\n");
 				continue;
 			}
-			char buf[1024];
 			int idx = 0;
 			location = location + 6;
 			for (; *location != '\n'; location++) {
@@ -77,27 +75,15 @@ int main()
 				idx++;
 				buf[idx] = '\0';
 			}
-			printf("PPID: %s\n", buf);
-//			for (; ; location++) {
-//				if (*location == '\t')
-//					continue;
-//				location++;
-//				for (int i=0; *location == '\n'; location++) {
-//					buf[i] = *location;
-//					i++;
-//					buf[i] = '\0';
-//				}
-//				break;
-//			}
-//			printf("PPID: %s\n", buf);
-//			ppid = atoi(buf);
 		}
-//		printf("Name: %s\n", name);
+		int ppid = atoi(buf);
+		printf("Name: %s\n", name);
 		printf("PID: %d\n", pidNum);
-//		printf("PPID: %d\n", ppid);
+		printf("PPID: %d\n", ppid);
 		/* create node for this process */
 		tree[nextNode].name = name;
 		tree[nextNode].pid = pidNum;
+		tree[nextNode].parentPid = ppid;
 		nextNode++;
 	}
 
