@@ -9,6 +9,7 @@
 int main(int argc, char *argv[])
 {
 	if (argc != 2 || !strcmp(argv[1], "--help")) {
+		printf("Show PID and command name of all process owned by a particular user\n\n");
 		printf("Usage: %s <user>\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
