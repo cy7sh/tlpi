@@ -12,10 +12,20 @@ struct node {
 	int pid;
 	char* name;
 	int parentPid;
-	int childPid;
+	int nextChild;
+	int childPid[1024];
 };
 struct node tree[MAX_NODES];
 int nextNode = 0;
+int initIndex; /* where the init(PID=1) process is */
+
+void drawTree()
+{
+	struct node initNode = tree[initIndex];
+	printf("[%d] %s\n", initNode.pid, initNode.name);
+	if (initNode.nextChild == 0)
+		return;
+}
 
 int main()
 {
@@ -84,7 +94,15 @@ int main()
 		tree[nextNode].name = name;
 		tree[nextNode].pid = pidNum;
 		tree[nextNode].parentPid = ppid;
+		tree[nextNode].nextChild = 0;
+		if (pidNum == 1)
+			initIndex = nextNode;
+		/* if this a child of init update init node */
+		if (ppid == 1) {
+			tree[initIndex].childPid[tree[initIndex].nextChild] = pidNum;
+			tree[initIndex].nextChild++;
+		}
 		nextNode++;
 	}
-
+	drawTree();
 }
