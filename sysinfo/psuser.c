@@ -5,7 +5,6 @@
 #include <string.h>
 #include <dirent.h>
 #include <pwd.h>
-#include <math.h>
 
 int main(int argc, char *argv[])
 {
@@ -52,6 +51,7 @@ int main(int argc, char *argv[])
 //		printf("current file %s\n", filename);
 		/* read from status file and check for match */
 		char buf[65536];
+		/* i know readed is not a word */
 		for (int readed = read(fd, buf, 65535); readed > 0; readed = read(fd, buf, 65536)) {
 			buf[65535] = '\0';
 			char searchTerm[strlen("Uid:\t") + strlen(uidStr) + 2];
