@@ -26,10 +26,10 @@ void drawTree()
 	printf("[%d] %s\n", initNode.pid, initNode.name);
 	if (initNode.nextChild == 0)
 		return;
-	int childNode;
+	struct node childNode;
 	for (int i=0; i<initNode.nextChild; i++) {
-		childNode = initNode.childrenIndex[i];
-		printf("|- %d\n", childNode);
+		childNode = tree[initNode.childrenIndex[i]];
+		printf("|-[%d] %s\n", childNode.pid, childNode.name);
 	}
 }
 
