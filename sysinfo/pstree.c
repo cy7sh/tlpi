@@ -26,6 +26,11 @@ void drawTree()
 	printf("[%d] %s\n", initNode.pid, initNode.name);
 	if (initNode.nextChild == 0)
 		return;
+	int childNode;
+	for (int i=0; i<initNode.nextChild; i++) {
+		childNode = initNode.childPid[0];
+		printf("|- %d\n", childNode);
+	}
 }
 
 int main()
