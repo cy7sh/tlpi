@@ -16,11 +16,12 @@ struct node {
 	int childPid[1024];
 };
 struct node tree[MAX_NODES];
-int nextNode = 0;
-int initIndex; /* where the init(PID=1) process is */
+unsigned int nextNode = 0;
+int initIndex = -1; /* where the init(PID=1) process is */
 
 void drawTree()
 {
+	printf("draw init index: %d\n", initIndex);
 	struct node initNode = tree[initIndex];
 	printf("[%d] %s\n", initNode.pid, initNode.name);
 	if (initNode.nextChild == 0)
@@ -54,7 +55,7 @@ int main()
 		if (fd == -1)
 			continue;
 		lseek(fd, 0, SEEK_SET);
-		char name[1024];
+		char *name = malloc(2048);
 		char buf[65536];
 		buf[65535] = '\0';
 		for (int readed = read(fd, buf, 65536); readed > 0; readed = read(fd, buf, 65536)) {
@@ -66,7 +67,8 @@ int main()
 				for (int j=i+1; j<65536; j++) {
 					if (buf[j] == '\n')
 						break;
-					name[idx] = buf[j];
+					memcpy(name+idx, buf+j, 1);
+					//name[idx] = buf[j];
 					idx++;
 				}
 				name[idx] = '\0';
@@ -87,18 +89,16 @@ int main()
 			}
 		}
 		int ppid = atoi(buf);
-		printf("Name: %s\n", name);
-		printf("PID: %d\n", pidNum);
-		printf("PPID: %d\n", ppid);
 		/* create node for this process */
 		tree[nextNode].name = name;
 		tree[nextNode].pid = pidNum;
 		tree[nextNode].parentPid = ppid;
 		tree[nextNode].nextChild = 0;
-		if (pidNum == 1)
+		if (pidNum == 1) {
 			initIndex = nextNode;
+		}
 		/* if this a child of init update init node */
-		if (ppid == 1) {
+		if (initIndex != -1 && ppid == 1) {
 			tree[initIndex].childPid[tree[initIndex].nextChild] = pidNum;
 			tree[initIndex].nextChild++;
 		}
