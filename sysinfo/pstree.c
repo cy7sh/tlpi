@@ -30,10 +30,12 @@ void createChain()
 			if (i == j)
 				continue;
 			if (tree[i].pid == tree[j].parentPid) {
-				tree[j].childrenIndex[tree[j].nextChild] = tree[j].pid;
-				tree[j].nextChild++;
+//				printf("found one children\n");
+				tree[i].childrenIndex[tree[i].nextChild] = tree[j].pid;
+				tree[i].nextChild++;
 			}
 		}
+		printf("found %d children for %s\n", tree[i].nextChild, tree[i].name);
 	}
 }
 
@@ -42,8 +44,8 @@ void enumerateChildren(struct node *parent, int depth)
 	char tabs[128];
 	memset(tabs, '\t', depth);
 	tabs[depth] = '\0';
-	printf("%s|-[%d] %s\n", tabs, parent->pid, parent->name);
-//	printf("has %d children\n", parent->nextChild);
+//	printf("%s|-[%d] %s\n", tabs, parent->pid, parent->name);
+	printf("has %d children\n", parent->nextChild);
 	for (int i=0; i<parent->nextChild; i++) {
 		struct node *child = &tree[parent->childrenIndex[i]];
 		int childDepth;
