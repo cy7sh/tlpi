@@ -37,18 +37,26 @@ void createChain()
 	}
 }
 
+void enumerateChildren(struct node *parent, int depth)
+{
+	char tabs[128];
+	memset(tabs, '\t', depth);
+	tabs[depth] = '\0';
+	printf("%s|-[%d] %s\n", tabs, parent->pid, parent->name);
+//	printf("has %d children\n", parent->nextChild);
+	for (int i=0; i<parent->nextChild; i++) {
+		struct node *child = &tree[parent->childrenIndex[i]];
+		int childDepth;
+		memcpy(&childDepth, &depth, sizeof(int));
+		childDepth++;
+		enumerateChildren(child, childDepth);
+	}
+}
+
 void drawTree()
 {
-	printf("draw init index: %d\n", initIndex);
 	struct node initNode = tree[initIndex];
-	printf("[%d] %s\n", initNode.pid, initNode.name);
-	if (initNode.nextChild == 0)
-		return;
-	struct node childNode;
-	for (int i=0; i<initNode.nextChild; i++) {
-		childNode = tree[initNode.childrenIndex[i]];
-		printf("|-[%d] %s\n", childNode.pid, childNode.name);
-	}
+	enumerateChildren(&initNode, 0);
 }
 
 int main()
