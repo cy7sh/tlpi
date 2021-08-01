@@ -19,6 +19,24 @@ struct node tree[MAX_NODES];
 unsigned int nextNode = 0;
 int initIndex = -1; /* where the init(PID=1) process is */
 
+void createChain()
+{
+	for (int i=0; i<nextNode; i++) {
+		/* init must be populated already */
+		if (i == initIndex)
+			continue;
+		/* find children of this process */
+		for (int j=0; j<nextNode; j++) {
+			if (i == j)
+				continue;
+			if (tree[i].pid == tree[j].parentPid) {
+				tree[j].childrenIndex[tree[j].nextChild] = tree[j].pid;
+				tree[j].nextChild++;
+			}
+		}
+	}
+}
+
 void drawTree()
 {
 	printf("draw init index: %d\n", initIndex);
@@ -110,5 +128,6 @@ int main()
 		}
 		nextNode++;
 	}
+	createChain();
 	drawTree();
 }
