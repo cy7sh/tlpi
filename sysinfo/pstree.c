@@ -13,7 +13,7 @@ struct node {
 	char* name;
 	int parentPid;
 	int nextChild;
-	int childPid[1024];
+	int childrenIndex[1024];
 };
 struct node tree[MAX_NODES];
 unsigned int nextNode = 0;
@@ -28,7 +28,7 @@ void drawTree()
 		return;
 	int childNode;
 	for (int i=0; i<initNode.nextChild; i++) {
-		childNode = initNode.childPid[0];
+		childNode = initNode.childrenIndex[i];
 		printf("|- %d\n", childNode);
 	}
 }
@@ -102,9 +102,10 @@ int main()
 		if (pidNum == 1) {
 			initIndex = nextNode;
 		}
-		/* if this a child of init update init node */
+		/* if this a child of init, update init node */
 		if (initIndex != -1 && ppid == 1) {
-			tree[initIndex].childPid[tree[initIndex].nextChild] = pidNum;
+			tree[initIndex].childrenIndex[tree[initIndex].nextChild] = nextNode;
+			memcpy(&tree[initIndex].childrenIndex[tree[initIndex].nextChild], &nextNode, sizeof(nextNode));
 			tree[initIndex].nextChild++;
 		}
 		nextNode++;
