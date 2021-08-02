@@ -5,7 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define MAX_NODES 1024
+#define MAX_NODES 5000
 
 /* a node on the tree */
 struct node {
@@ -31,23 +31,27 @@ void createChain()
 				continue;
 			if (tree[i].pid == tree[j].parentPid) {
 //				printf("found one children\n");
-				tree[i].childrenIndex[tree[i].nextChild] = tree[j].pid;
+				tree[i].childrenIndex[tree[i].nextChild] = j;
 				tree[i].nextChild++;
+//				printf("found children at %d\n", tree[j].pid);
 			}
 		}
-		printf("found %d children for %s\n", tree[i].nextChild, tree[i].name);
+//		printf("found %d children for %s\n", tree[i].nextChild, tree[i].name);
 	}
 }
 
-void enumerateChildren(struct node *parent, int depth)
+void enumerateChildren(struct node parent, int depth)
 {
+//	printf("current parent: %s depth: %d\t", parent.name, depth);
 	char tabs[128];
 	memset(tabs, '\t', depth);
 	tabs[depth] = '\0';
-//	printf("%s|-[%d] %s\n", tabs, parent->pid, parent->name);
-	printf("has %d children\n", parent->nextChild);
-	for (int i=0; i<parent->nextChild; i++) {
-		struct node *child = &tree[parent->childrenIndex[i]];
+	printf("%s|-[%d] %s\n", tabs, parent.pid, parent.name);
+//	printf("has %d children\n", parent.nextChild);
+	for (int i=0; i<parent.nextChild; i++) {
+//		printf("child index: %d, nextChild: %d\n", parent.childrenIndex[i], parent.nextChild);
+//		printf("child index: %d, nextNode: %d\n", parent.childrenIndex[i], nextNode);
+		struct node child = tree[parent.childrenIndex[i]];
 		int childDepth;
 		memcpy(&childDepth, &depth, sizeof(int));
 		childDepth++;
@@ -58,7 +62,7 @@ void enumerateChildren(struct node *parent, int depth)
 void drawTree()
 {
 	struct node initNode = tree[initIndex];
-	enumerateChildren(&initNode, 0);
+	enumerateChildren(initNode, 0);
 }
 
 int main()
