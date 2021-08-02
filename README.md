@@ -2,5 +2,5 @@ This is what came to be when I was reading [The Linux Programming Interface](htt
 
 ## I want to flex...
 - [my implementation of malloc and free](memalloc/bmalloc.c)
-- [shows PID and command name of all process owned by a particular user](sysinfo/psuser.c)
+- [psuser - shows PID and command name of all process owned by a particular user](sysinfo/psuser.c)
 - [my implementation of pstree](sysinfo/pstree.c)
