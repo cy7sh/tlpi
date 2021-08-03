@@ -24,9 +24,38 @@ int main(int argc, char *argv[])
 		if (exess[0] != '\0') {
 			continue;
 		}
-		/* read stuff from status file */
 		char *pid = rdir->d_name;
 		char filename[strlen("/proc/") + strlen(pid) + strlen("/status") + 1];
+		/* enumerate /proc/PID/fd */
+		char fdirname[1024];
+		fdirname[0] = '\0';
+		strcat(fdirname, "/proc/");
+		strcat(fdirname, pid);
+		strcat(fdirname, "/fd");
+		DIR *fdir = opendir(fdirname);
+		if (fdir == NULL) {
+			continue;
+		}
+		char expanded[2048];
+		int match = 0;
+		for (struct dirent *frdir = readdir(fdir); frdir != NULL; frdir = readdir(fdir)) {
+			char pathname[2048];
+			pathname[0] = '\0';
+			strcat(pathname, fdirname);
+			strcat(pathname, "/");
+			strcat(pathname, frdir->d_name);
+			int bufsize = readlink(pathname, expanded, 2048);
+			if (bufsize == -1)
+				continue;
+			expanded[bufsize+2] = '\0';
+			if (strstr(expanded, argv[1]) != NULL) {
+				match = 1;
+				break;
+			}
+		}
+		if (match == 0)
+			continue;
+		/* read stuff from status file */
 		filename[0] = '\0';
 		strcat(filename, "/proc/");
 		strcat(filename, pid);
