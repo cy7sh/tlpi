@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
 				numLines++;
 		}
 	}
+	printf("total lines is %d\n", numLines);
 	lseek(fd, 0, SEEK_SET);
 	int startLine = numLines - toRead;
 	for (int numRead = read(fd, buf, BUF_SIZE-1); numRead != 0; numRead = read(fd, buf, BUF_SIZE-1)) {
@@ -40,7 +41,7 @@ int main(int argc, char *argv[])
 				count++;
 				if (count >= startLine) {
 					buf[BUF_SIZE-1] = '\0';
-					printf("%s", buf);
+//					printf("%s", buf);
 				}
 			}
 		}
