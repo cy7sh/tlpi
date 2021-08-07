@@ -11,8 +11,8 @@ int main(int argc, char *argv[])
 	if (argc < 2 || !strcmp(argv[1], "--help")) {
 		printf("Usage: %s [-n <number of lines>] <file>\n", argv[0]);
 	}
-	char *filename = (argc > 3) ? argv[2] : argv[1];
-	int toRead = (argc > 3) ? strtol(argv[2], NULL, 10) : 10;
+	char *filename = (argc > 2) ? argv[3] : argv[1];
+	int toRead = (argc > 2) ? strtol(argv[2], NULL, 10) : 10;
 	int fd = open(filename, O_RDONLY);
 	/* read from file */
 	char buf[BUF_SIZE];
