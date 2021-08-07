@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 //				printf("current line: %d\n", count);
 				if (count == startLine) {
 					buf[numRead + 1] = '\0';
-					printf("%s", &buf[i]);
+					printf("%s", &buf[i+1]);
 					break;
 				}
 			}
