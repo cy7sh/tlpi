@@ -44,10 +44,10 @@ int main(int argc, char *argv[])
 	strcat(filename, "/");
 	strcat(filename, "x");
 	struct timeval init;
-	struct timeval afterCreate;
-	gettimeofday(&init, NULL);
+	struct timeval afterOp;
 	char *files[numFiles];
 	int last;
+	gettimeofday(&init, NULL);
 	/* create 1-byte files */
 	for (int i=0; i<numFiles; i++) {
 		srand(init.tv_usec + i);
@@ -71,12 +71,18 @@ int main(int argc, char *argv[])
 		files[i] = entry;
 		last = i;
 	}
-	gettimeofday(&afterCreate, NULL);
-	float interval = (afterCreate.tv_usec - init.tv_usec) * 0.000001;
+	gettimeofday(&afterOp, NULL);
+	float interval = (afterOp.tv_usec - init.tv_usec) * 0.000001;
 	printf("time taken to create files: %.03f\n", interval);
 	/* enumerate the array and delete the files */
+	gettimeofday(&init, NULL);
 	qsort(files, last+1, sizeof(char *), compare);
 	for (int i=0; i <= last && files[i] != NULL; i++) {
-		puts(files[i]);
+		if (remove(files[i]) == -1) {
+			perror("error deleting file");
+		}
 	}
+	gettimeofday(&afterOp, NULL);
+	interval = (afterOp.tv_usec - init.tv_usec) * 0.000001;
+	printf("time taken to delete files: %.03f\n", interval);
 }
