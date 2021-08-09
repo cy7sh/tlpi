@@ -13,11 +13,11 @@ wordexp_t directory;
 
 int compare(const void *first, const void *second)
 {
-	int firstNum = atoi(&first[strlen(*directory.we_wordv)+3]);
-	int secondNum = atoi(&second[strlen(*directory.we_wordv)+3]);
-	printf("%s, %s\n", (char *) first, (char *) second);
-	printf("first: %d second: %d\n", firstNum, secondNum);
-	if (firstNum == secondNum) 
+	char *firstStr = *(char **) first;
+	char *secondStr = *(char **) second;
+	int firstNum = atoi(&firstStr[strlen(*directory.we_wordv)+2]);
+	int secondNum = atoi(&secondStr[strlen(*directory.we_wordv)+2]);
+	if (firstNum == secondNum)
 		return 0;
 	if (firstNum < secondNum)
 		return -1;
