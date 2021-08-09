@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/times.h>
+#include <errno.h>
 
 int main(int argc, char *argv[])
 {
@@ -30,7 +31,7 @@ int main(int argc, char *argv[])
 	struct timeval afterCreate;
 	gettimeofday(&init, NULL);
 	for (int i=0; i<numFiles; i++) {
-		srand(time(NULL) + i);
+		srand(init.tv_usec + i);
 		int num = rand() % 999999;
 		char numStr[7];
 		sprintf(numStr, "%d", num);
@@ -38,6 +39,9 @@ int main(int argc, char *argv[])
 		strcat(filename, numStr);
 		int fd = open(filename, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
 		if (fd == -1) {
+			/* random numbers are overlapping for some reason */
+			if (errno == EEXIST)
+				continue;
 			perror("file create error");
 			exit(EXIT_FAILURE);
 		}
