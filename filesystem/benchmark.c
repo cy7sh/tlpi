@@ -18,6 +18,10 @@ int compare(const void *first, const void *second)
 {
 	char *firstStr = *(char **) first;
 	char *secondStr = *(char **) second;
+	if (secondStr == NULL)
+		return 1;
+	if (firstStr == NULL)
+		return -1;
 	int firstNum = atoi(&firstStr[dirlen+2]);
 	int secondNum = atoi(&secondStr[dirlen+2]);
 	if (firstNum == secondNum)
@@ -80,17 +84,20 @@ int main(int argc, char *argv[])
 		files[i] = entry;
 		last = i;
 	}
+	printf("created %d files\n", last+1);
 	gettimeofday(&afterOp, NULL);
 	float interval = (afterOp.tv_usec - init.tv_usec) * 0.000001;
 	printf("time taken to create files: %.03f\n", interval);
 	/* enumerate the array and delete the files */
 	gettimeofday(&init, NULL);
-	qsort(files, last+1, sizeof(char *), compare);
-	for (int i=0; i <= last && files[i] != NULL; i++) {
+//	qsort(files, last+1, sizeof(char *), compare);
+	int i=0;
+	for (; i <= last; i++) {
 		if (remove(files[i]) == -1) {
 			perror("error deleting file");
 		}
 	}
+	printf("deleted %d files\n", i+1);
 	gettimeofday(&afterOp, NULL);
 	interval = (afterOp.tv_usec - init.tv_usec) * 0.000001;
 	printf("time taken to delete files: %.03f\n", interval);
