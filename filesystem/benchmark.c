@@ -3,20 +3,23 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
-#include <wordexp.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/times.h>
 #include <errno.h>
 
-wordexp_t directory;
+#ifdef _XOPEN_SOURCE
+	#include <wordexp.h>
+#else
+	int dirlen;
+#endif
 
 int compare(const void *first, const void *second)
 {
 	char *firstStr = *(char **) first;
 	char *secondStr = *(char **) second;
-	int firstNum = atoi(&firstStr[strlen(*directory.we_wordv)+2]);
-	int secondNum = atoi(&secondStr[strlen(*directory.we_wordv)+2]);
+	int firstNum = atoi(&firstStr[dirlen+2]);
+	int secondNum = atoi(&secondStr[dirlen+2]);
 	if (firstNum == secondNum)
 		return 0;
 	if (firstNum < secondNum)
@@ -37,10 +40,16 @@ int main(int argc, char *argv[])
 		printf("maximum number of files is 999999\n");
 		exit(EXIT_FAILURE);
 	}
+#ifdef _XOPEN_SOURCE
 	wordexp(argv[1], &directory, 0);
-	char filename[strlen(*directory.we_wordv) + 9];
+	int dirlen = strlen(*directory.we_wordv)
+	char filename[dirlen + 9];
+#else
+	char filename[strlen(argv[1]) + 9];
+	dirlen = strlen(argv[1]);
 	filename[0] = '\0';
-	strcat(filename, *directory.we_wordv);
+	strcat(filename, argv[1]);
+#endif
 	strcat(filename, "/");
 	strcat(filename, "x");
 	struct timeval init;
@@ -54,10 +63,9 @@ int main(int argc, char *argv[])
 		int num = rand() % 999999;
 		char numStr[7];
 		sprintf(numStr, "%d", num);
-		filename[strlen(*directory.we_wordv)+2] = '\0';
+		filename[dirlen+2] = '\0';
 		strcat(filename, numStr);
 		int fd = open(filename, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-		write(fd, "x", 1);
 		if (fd == -1) {
 			/* random numbers are overlapping for some reason */
 			if (errno == EEXIST)
@@ -65,6 +73,7 @@ int main(int argc, char *argv[])
 			perror("file create error");
 			exit(EXIT_FAILURE);
 		}
+		write(fd, "x", 1);
 		close(fd);
 		char *entry = malloc(sizeof(filename));
 		memcpy(entry, filename, sizeof(filename));
