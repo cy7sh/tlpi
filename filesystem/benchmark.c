@@ -7,6 +7,9 @@
 #include <unistd.h>
 #include <sys/times.h>
 #include <errno.h>
+#ifdef _BSD_SOURCE
+#include <sys/stat.h>
+#endif
 
 #ifdef _XOPEN_SOURCE
 	#include <wordexp.h>
