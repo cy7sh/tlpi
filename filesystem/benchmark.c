@@ -36,7 +36,8 @@ int compare(const void *first, const void *second)
 int main(int argc, char *argv[])
 {
 	if (argc < 3 || !strcmp(argv[0], "--help")) {
-		printf("Usage: %s <directory> <numer of files>\n", argv[0]);
+		printf("Usage: %s <directory> <number of files>\n", argv[0]);
+		printf("Creates <number of files> 1-byte files in <directory> in random order and deletes them in ascending order. Times those operations.\n");
 		exit(EXIT_FAILURE);
 	}
 	int numFiles = strtol(argv[2], NULL, 10);
@@ -85,7 +86,7 @@ int main(int argc, char *argv[])
 		next++;
 	}
 	gettimeofday(&afterOp, NULL);
-	float interval = (afterOp.tv_usec - init.tv_usec) * 0.000001;
+	float interval = (((afterOp.tv_sec * 1000000) + afterOp.tv_usec) - ((init.tv_sec * 1000000) + init.tv_usec)) * 0.000001;
 	printf("time taken to create files: %.03f\n", interval);
 	/* enumerate the array and delete the files */
 	gettimeofday(&init, NULL);
@@ -96,6 +97,6 @@ int main(int argc, char *argv[])
 		}
 	}
 	gettimeofday(&afterOp, NULL);
-	interval = (afterOp.tv_usec - init.tv_usec) * 0.000001;
+	interval = (((afterOp.tv_sec * 1000000) + afterOp.tv_usec) - ((init.tv_sec * 1000000) + init.tv_usec)) * 0.000001;
 	printf("time taken to delete files: %.03f\n", interval);
 }
