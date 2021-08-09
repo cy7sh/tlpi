@@ -59,10 +59,10 @@ int main(int argc, char *argv[])
 	struct timeval init;
 	struct timeval afterOp;
 	char *files[numFiles];
-	int last;
+	int next = 0;
 	gettimeofday(&init, NULL);
 	/* create 1-byte files */
-	for (int i=0; i<numFiles; i++) {
+	for (int i=0; next<numFiles; i++) {
 		srand(init.tv_usec + i);
 		int num = rand() % 999999;
 		char numStr[7];
@@ -81,23 +81,20 @@ int main(int argc, char *argv[])
 		close(fd);
 		char *entry = malloc(sizeof(filename));
 		memcpy(entry, filename, sizeof(filename));
-		files[i] = entry;
-		last = i;
+		files[next] = entry;
+		next++;
 	}
-	printf("created %d files\n", last+1);
 	gettimeofday(&afterOp, NULL);
 	float interval = (afterOp.tv_usec - init.tv_usec) * 0.000001;
 	printf("time taken to create files: %.03f\n", interval);
 	/* enumerate the array and delete the files */
 	gettimeofday(&init, NULL);
-//	qsort(files, last+1, sizeof(char *), compare);
-	int i=0;
-	for (; i <= last; i++) {
+	qsort(files, next, sizeof(char *), compare);
+	for (int i=0; i < next; i++) {
 		if (remove(files[i]) == -1) {
 			perror("error deleting file");
 		}
 	}
-	printf("deleted %d files\n", i+1);
 	gettimeofday(&afterOp, NULL);
 	interval = (afterOp.tv_usec - init.tv_usec) * 0.000001;
 	printf("time taken to delete files: %.03f\n", interval);
