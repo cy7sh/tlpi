@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 {
 	if (argc < 3 || !strcmp(argv[0], "--help")) {
 		printf("Usage: %s <directory> <number of files>\n", argv[0]);
-		printf("Creates <number of files> 1-byte files in <directory> in random order and deletes them in ascending order. Times those operations.\n");
+		printf("Creates <number of files> 1-byte random files in <directory> in random order and deletes them in ascending order. Times those operations.\n");
 		exit(EXIT_FAILURE);
 	}
 	int numFiles = strtol(argv[2], NULL, 10);
