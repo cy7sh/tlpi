@@ -30,6 +30,8 @@ int main(int argc, char *argv[])
 	struct timeval init;
 	struct timeval afterCreate;
 	gettimeofday(&init, NULL);
+	char *files[numFiles];
+	files[0] = NULL;
 	for (int i=0; i<numFiles; i++) {
 		srand(init.tv_usec + i);
 		int num = rand() % 999999;
@@ -45,10 +47,13 @@ int main(int argc, char *argv[])
 			perror("file create error");
 			exit(EXIT_FAILURE);
 		}
-		puts(filename);
 		close(fd);
+		char *entry = malloc(sizeof(filename));
+		memcpy(entry, filename, sizeof(filename));
+		files[i] = entry;
+		files[i+1] = NULL;
 	}
 	gettimeofday(&afterCreate, NULL);
 	float interval = (afterCreate.tv_usec - init.tv_usec) * 0.000001;
-	printf("time taken: %.03f\n", interval);
+	printf("time taken to create files: %.03f\n", interval);
 }
