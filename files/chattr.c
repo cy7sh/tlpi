@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <linux/fs.h>
-#include <fcntl.h>
+#include <fcntl.h> 
 
 int main(int argc, char *argv[])
 {
@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
 				attr |= FS_JOURNAL_DATA_FL;
 				break;
 			case 't':
+				attr |= FS_COMPR_FL;
 				attr |= FS_NOTAIL_FL;
 				break;
 			case 'T':
@@ -57,13 +58,14 @@ int main(int argc, char *argv[])
 				exit(EXIT_FAILURE);
 		}
 	}
-	int prevAttr;
+	int prevAttr = 0;
 	switch(argv[1][0]) {
 		case '=':
 			if (ioctl(fd, FS_IOC_SETFLAGS, &attr) == -1) {
 				perror("failed to set flags");
 				exit(EXIT_FAILURE);
 			}
+			break;
 		case '+':
 			;
 			if (ioctl(fd, FS_IOC_GETFLAGS, &prevAttr) == -1) {
@@ -75,6 +77,7 @@ int main(int argc, char *argv[])
 				perror("failed to set flags");
 				exit(EXIT_FAILURE);
 			}
+			break;
 		case '-':
 			;
 			if (ioctl(fd, FS_IOC_GETFLAGS, &prevAttr) == -1) {
@@ -86,5 +89,10 @@ int main(int argc, char *argv[])
 				perror("failed to set flags");
 				exit(EXIT_FAILURE);
 			}
+			break;
+		default:
+			printf("invalide attribute option\n");
+			exit(EXIT_FAILURE);
+			break;
 	}
 }
