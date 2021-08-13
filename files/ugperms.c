@@ -9,22 +9,22 @@
 
 extern char *optarg;
 
-void checkUser(const uid_t *uid, acl_entry_t *entry)
+void checkUser(uid_t uid, acl_entry_t entry)
 {
 	acl_tag_t tagType;
-	if (acl_get_tag_type(*entry, &tagType) == -1) {
+	if (acl_get_tag_type(entry, &tagType) == -1) {
 		printf("error reading entry\n");
 		exit(EXIT_FAILURE);
 	}
-	if (tagType == ACL_USER_OBJ || tagType == ACL_USER) {
-		uid_t *aclUid = acl_get_qualifier(*entry);
+	if (tagType == ACL_USER) {
+		uid_t *aclUid = acl_get_qualifier(entry);
 		if (aclUid == NULL) {
 			perror("failed to fetch qualifier");
 			exit(EXIT_FAILURE);
 		}
-		if (aclUid == uid) {
+		if (*aclUid == uid) {
 			acl_permset_t permset;
-			if (acl_get_permset(*entry, &permset) == -1) {
+			if (acl_get_permset(entry, &permset) == -1) {
 				perror("failed to fetch permission set");
 				exit(EXIT_FAILURE);
 			}
@@ -41,22 +41,22 @@ void checkUser(const uid_t *uid, acl_entry_t *entry)
 	}
 }
 
-void checkGroup(const gid_t *gid, acl_entry_t *entry)
+void checkGroup(const gid_t gid, acl_entry_t entry)
 {
 	acl_tag_t tagType;
-	if (acl_get_tag_type(*entry, &tagType) == -1) {
+	if (acl_get_tag_type(entry, &tagType) == -1) {
 		printf("error reading entry\n");
 		exit(EXIT_FAILURE);
 	}
-	if (tagType == ACL_GROUP_OBJ || tagType == ACL_GROUP) {
-		gid_t *aclGid = acl_get_qualifier(*entry);
+	if (tagType == ACL_GROUP) {
+		gid_t *aclGid = acl_get_qualifier(entry);
 		if (aclGid == NULL) {
 			perror("failed to fetch qualifier");
 			exit(EXIT_FAILURE);
 		}
-		if (aclGid == gid) {
+		if (*aclGid == gid) {
 			acl_permset_t permset;
-			if (acl_get_permset(*entry, &permset) == -1) {
+			if (acl_get_permset(entry, &permset) == -1) {
 				perror("failed to fetch permission set");
 				exit(EXIT_FAILURE);
 			}
@@ -88,7 +88,6 @@ int main(int argc, char *argv[])
 	while ((opt = getopt(argc, argv, "u:g:")) != -1) {
 		switch (opt) {
 			case 'u':
-				puts("hit 1");
 				user = 1;
 				char *endptr = malloc(strlen(optarg)+1);
 				uid = strtol(optarg, &endptr, 10);
@@ -121,9 +120,9 @@ int main(int argc, char *argv[])
 		} else if (status == 0)
 			break;
 		if (user) {
-			checkUser(&uid, &entry);
+			checkUser(uid, entry);
 		} else {
-			checkGroup(&gid, &entry);
+			checkGroup(gid, entry);
 		}
 		status = acl_get_entry(acl, ACL_NEXT_ENTRY, &entry);
 	}
