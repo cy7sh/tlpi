@@ -84,9 +84,11 @@ int main(int argc, char *argv[])
 	char *name;
 	uid_t uid;
 	gid_t gid;
-	while (getopt(argc, argv, "u:g:") == -1) {
-		switch (*optarg) {
+	char opt;
+	while ((opt = getopt(argc, argv, "u:g:")) != -1) {
+		switch (opt) {
 			case 'u':
+				puts("hit 1");
 				user = 1;
 				char *endptr = malloc(strlen(optarg)+1);
 				uid = strtol(optarg, &endptr, 10);
@@ -112,16 +114,17 @@ int main(int argc, char *argv[])
 	}
 	acl_entry_t entry;
 	int status = acl_get_entry(acl, ACL_FIRST_ENTRY, &entry);
-	if (status == -1 || status == 0) {
-		printf("couldn't fetch ACL entries\n");
-		exit(EXIT_FAILURE);
-	}
-	do {
+	while (1) {
+		if (status == -1) {
+			perror("couldn't fetch ACL entries");
+			exit(EXIT_FAILURE);
+		} else if (status == 0)
+			break;
 		if (user) {
 			checkUser(&uid, &entry);
 		} else {
 			checkGroup(&gid, &entry);
 		}
 		status = acl_get_entry(acl, ACL_NEXT_ENTRY, &entry);
-	} while (status != 0 && status != -1);
+	}
 }
