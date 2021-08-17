@@ -3,18 +3,20 @@
 #include <linux/limits.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 
 char *brealpath(const char *path, char *resolved_path)
 {
 	if (resolved_path == NULL) {
 		resolved_path = malloc(PATH_MAX);
 	}
+	char *cwd;
 	if (path[0] != '/') {
-		char *cwd = malloc(PATH_MAX);
+		cwd = malloc(PATH_MAX);
 		if (getcwd(cwd, PATH_MAX) == NULL) {
 			return NULL;
 		}
-		resolved_path = cwd;
+		strcpy(resolved_path, cwd);
 		strcat(resolved_path, "/");
 		strcat(resolved_path, path);
 	} else {
@@ -52,6 +54,37 @@ char *brealpath(const char *path, char *resolved_path)
 			}
 		}
 		prevSlash = slash;
+		/* dereference if current directory is a symlink */
+		char *link = malloc(PATH_MAX);
+		char *unlinked = malloc(PATH_MAX);
+		strcpy(link, resolved_path);
+		*(link + (slash - resolved_path)) = '\0';
+		if (strlen(link) == 0) {
+			goto end;
+		}
+		int size = readlink(link, unlinked, PATH_MAX);
+		if (size == -1 && errno != EINVAL) {
+			perror("error resolving link");
+			exit(EXIT_FAILURE);
+		}
+		if (size != -1) {
+			unlinked[size] = '\0';
+			/* if unlinked is not absolute, make it */
+			char temp[PATH_MAX];
+			if (unlinked[0] != '/') {
+				strcpy(temp, unlinked);
+				strcpy(unlinked, cwd);
+				strcat(unlinked, "/");
+				strcat(unlinked, temp);
+			}
+			/* update resolved_path */
+			strcpy(temp, slash);
+			strcpy(resolved_path, unlinked);
+			strcat(resolved_path, temp);
+		}
+end:
+		free(link);
+		free(unlinked);
 		slash = strchr(slash+1, '/');
 	}
 	return resolved_path;
