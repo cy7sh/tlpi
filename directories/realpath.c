@@ -20,10 +20,25 @@ char *brealpath(const char *path, char *resolved_path)
 	} else {
 		strcpy(resolved_path, path);
 	}
-	/* resolve .'s and ..'s */
 	char *slash = strchr(resolved_path, '/');
+	char *prevSlash = NULL;
 	while (slash != NULL) {
-		if (*(slash + 1) == '.') {
+		/* resolve .. */
+		if ((*(slash + 1) == '.') && (*(slash + 2) == '.')) {
+			/* 
+			 * /foo  /bar  /     .  .  /  foo/bar/
+			 *       prev  slash +1 +2 +3 +4 w.r.t slash
+			 * /foo/foo/bar/
+			 *      prev+1...
+			 */
+			int j = 1;
+			for (char *i = slash+4; *(i-1) != '\0'; i++) {
+				*(prevSlash + j) = *i;
+				j++;
+			}
+		}
+		/* resolve . */
+		else if (*(slash + 1) == '.') {
 			/* 
 			 * /foo/bar/     .  /  foo/bar/
 			 *         slash +1 +2 +3
@@ -36,6 +51,7 @@ char *brealpath(const char *path, char *resolved_path)
 				j++;
 			}
 		}
+		prevSlash = slash;
 		slash = strchr(slash+1, '/');
 	}
 	return resolved_path;
