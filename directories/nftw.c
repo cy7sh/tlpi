@@ -2,6 +2,9 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <libgen.h>
+#include <string.h>
+#include <dirent.h>
 
 enum
 {
@@ -48,28 +51,58 @@ struct FTW {
 	int level;
 };
 
+void evaluateNode(const char *dirpath, int flags, int level, int (*fn) (const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf))
+{
+	struct stat sb;
+	int out;
+	int typeflag;
+	if (flags & FTW_PHYS) out = lstat(dirpath, &sb);
+	else out = stat(dirpath, &sb);
+	if (out == -1) typeflag = FTW_NS;
+	switch (sb.st_mode & S_IFMT) {
+		case S_IFREG:
+			typeflag = FTW_F;
+			break;
+		case S_IFDIR:
+			typeflag = FTW_D;
+			break;
+		case S_IFLNK:
+			typeflag = FTW_SL;
+			break;
+	}
+	char baseTemp[PATH_MAX];
+	strcpy(baseTemp, dirpath);
+	char *base = basename(baseTemp);
+	struct FTW ftwbuf = {
+		.base = *base,
+		.level = level
+	};
+	fn(dirpath, &sb, typeflag, &ftwbuf);
+}
+
+void traverseNode(const char *path, int flags, int level, int (*fn) (const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf))
+{
+	if (!(flags & FTW_DEPTH)) {
+		evaluateNode(path, flags, level, fn);
+	}
+	DIR *node = opendir(path);
+	struct dirent *child = readdir(node);
+	while (child != NULL) {
+		char childPath[PATH_MAX];
+		strcpy(childPath, path);
+		strcat(childPath, "/");
+		strcat(childPath, child->d_name);
+		if (child->d_type == DT_DIR)
+			traverseNode(childPath, flags, level+1, fn);
+		else
+			evaluateNode(childPath, flags, level, fn);
+	}
+}
+
 int nftw(const char *dirpath, int (*fn) (const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf), int nopenfd, int flags)
 {
-	DIR *parent = opendir(dirpath);
-	if (!(flags & FTW_DEPTH)) {
-		struct stat sb;
-		int out;
-		int typeflag;
-		if (flags & FTW_PHYS) out = lstat(dirpath, &sb);
-		else out = stat(dirpath, &sb);
-		if (out == -1) typeflag = FTW_NS;
-		switch (sb.st_mode & S_IFMT) {
-			case S_IFREG:
-				typeflag = FTW_F;
-				break;
-			case S_IFDIR:
-				typeflag = FTW_D;
-				break;
-			case S_IFLNK:
-				typeflag = FTW_SL;
-				break;
-		}
-	}
+	int level = 0;
+	traverseNode(dirpath, flags, level, fn);
 	return 0;
 }
 
