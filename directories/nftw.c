@@ -5,6 +5,7 @@
 #include <libgen.h>
 #include <string.h>
 #include <dirent.h>
+#include <errno.h>
 
 enum
 {
@@ -58,17 +59,27 @@ int evaluateNode(const char *dirpath, int flags, int level, int (*fn) (const cha
 	int typeflag;
 	if (flags & FTW_PHYS) out = lstat(dirpath, &sb);
 	else out = stat(dirpath, &sb);
-	if (out == -1) typeflag = FTW_NS;
-	switch (sb.st_mode & S_IFMT) {
-		case S_IFREG:
-			typeflag = FTW_F;
-			break;
-		case S_IFDIR:
-			typeflag = FTW_D;
-			break;
-		case S_IFLNK:
-			typeflag = FTW_SL;
-			break;
+	if (out == -1) {
+		switch (errno) {
+			case ENOENT:
+				typeflag = FTW_SLN;
+			default:
+				typeflag = FTW_NS;
+		}
+	}
+	else {
+		switch (sb.st_mode & S_IFMT) {
+			case S_IFREG:
+				typeflag = FTW_F;
+				break;
+			case S_IFDIR:
+				if (flags & FTW_DEPTH) typeflag = FTW_DP;
+				else typeflag = FTW_D;
+				break;
+			case S_IFLNK:
+				typeflag = FTW_SL;
+				break;
+		}
 	}
 	char baseTemp[PATH_MAX];
 	strcpy(baseTemp, dirpath);
@@ -148,8 +159,5 @@ int test(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftw
 
 int main(int argc, char *argv[])
 {
-	puts("Pre-order:");
-	if (nftw(argv[1], test, 10, 0) != 0) puts("fail");
-	puts("Post-order");
-	if (nftw(argv[1], test, 10, FTW_DEPTH) != 0) puts("fail");
+	if (nftw(argv[1], test, 10, FTW_PHYS) != 0) puts("fail");
 }
