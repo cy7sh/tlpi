@@ -91,8 +91,10 @@ int traverseNode(const char *path, int flags, int level, int (*fn) (const char *
 	DIR *node = opendir(path);
 	struct dirent *child = readdir(node);
 	while (child != NULL) {
-		if (!(strcmp(child->d_name, ".") || !(strcmp(child->d_name, ".."))))
-			puts("found . or ..");
+		if (!(strcmp(child->d_name, ".")) || !(strcmp(child->d_name, ".."))) {
+			child = readdir(node);
+			continue;
+		}
 		char childPath[PATH_MAX];
 		strcpy(childPath, path);
 		strcat(childPath, "/");
