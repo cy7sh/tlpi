@@ -47,7 +47,7 @@ enum
 };
 
 struct FTW {
-	int base;
+	char *base;
 	int level;
 };
 
@@ -74,7 +74,7 @@ int evaluateNode(const char *dirpath, int flags, int level, int (*fn) (const cha
 	strcpy(baseTemp, dirpath);
 	char *base = basename(baseTemp);
 	struct FTW ftwbuf = {
-		.base = *base,
+		.base = base,
 		.level = level
 	};
 	if (fn(dirpath, &sb, typeflag, &ftwbuf) != 0) {
@@ -99,16 +99,19 @@ int traverseNode(const char *path, int flags, int level, int (*fn) (const char *
 		strcpy(childPath, path);
 		strcat(childPath, "/");
 		strcat(childPath, child->d_name);
-		puts(child->d_name);
 		if (child->d_type == DT_DIR) {
+			/* recursively traverse directories */
 			if (traverseNode(childPath, flags, level+1, fn) != 0) return 1;
 		}
-/*		else
+		else
 			if (evaluateNode(childPath, flags, level, fn) != 0) {
 				return 1;
 			}
-			*/
 		child = readdir(node);
+	}
+	/* post-order if FTW_DEPTH is set */
+	if ((flags & FTW_DEPTH)) {
+		evaluateNode(path, flags, level, fn);
 	}
 	return 0;
 }
@@ -122,11 +125,31 @@ int nftw(const char *dirpath, int (*fn) (const char *fpath, const struct stat *s
 
 int test(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
 {
-//	puts(fpath);
+	switch (typeflag) {
+		case FTW_F:
+			printf("Regular: %s\n", fpath);
+			printf("Base: %s Level: %d\n", ftwbuf->base, ftwbuf->level);
+			printf("Inode: %ld\n", sb->st_ino);
+			break;
+		case FTW_D:
+			printf("Directory: %s\n", fpath);
+			printf("Base: %s Level: %d\n", ftwbuf->base, ftwbuf->level);
+			printf("Inode: %ld\n", sb->st_ino);
+			break;
+		case FTW_SL:
+			printf("Symlink: %s\n", fpath);
+			printf("Base: %s Level: %d\n", ftwbuf->base, ftwbuf->level);
+			printf("Inode: %ld\n", sb->st_ino);
+			break;
+	}
+	printf("\n");
 	return 0;
 }
 
 int main(int argc, char *argv[])
 {
+	puts("Pre-order:");
 	if (nftw(argv[1], test, 10, 0) != 0) puts("fail");
+	puts("Post-order");
+	if (nftw(argv[1], test, 10, FTW_DEPTH) != 0) puts("fail");
 }
