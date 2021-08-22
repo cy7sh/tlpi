@@ -51,7 +51,7 @@ struct FTW {
 	int level;
 };
 
-void evaluateNode(const char *dirpath, int flags, int level, int (*fn) (const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf))
+int evaluateNode(const char *dirpath, int flags, int level, int (*fn) (const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf))
 {
 	struct stat sb;
 	int out;
@@ -77,10 +77,13 @@ void evaluateNode(const char *dirpath, int flags, int level, int (*fn) (const ch
 		.base = *base,
 		.level = level
 	};
-	fn(dirpath, &sb, typeflag, &ftwbuf);
+	if (fn(dirpath, &sb, typeflag, &ftwbuf) != 0) {
+		return 1;
+	}
+	return 0;
 }
 
-void traverseNode(const char *path, int flags, int level, int (*fn) (const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf))
+int traverseNode(const char *path, int flags, int level, int (*fn) (const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf))
 {
 	if (!(flags & FTW_DEPTH)) {
 		evaluateNode(path, flags, level, fn);
@@ -88,25 +91,40 @@ void traverseNode(const char *path, int flags, int level, int (*fn) (const char 
 	DIR *node = opendir(path);
 	struct dirent *child = readdir(node);
 	while (child != NULL) {
+		if (!(strcmp(child->d_name, ".") || !(strcmp(child->d_name, ".."))))
+			puts("found . or ..");
 		char childPath[PATH_MAX];
 		strcpy(childPath, path);
 		strcat(childPath, "/");
 		strcat(childPath, child->d_name);
-		if (child->d_type == DT_DIR)
-			traverseNode(childPath, flags, level+1, fn);
-		else
-			evaluateNode(childPath, flags, level, fn);
+		puts(child->d_name);
+		if (child->d_type == DT_DIR) {
+			if (traverseNode(childPath, flags, level+1, fn) != 0) return 1;
+		}
+/*		else
+			if (evaluateNode(childPath, flags, level, fn) != 0) {
+				return 1;
+			}
+			*/
+		child = readdir(node);
 	}
+	return 0;
 }
 
 int nftw(const char *dirpath, int (*fn) (const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf), int nopenfd, int flags)
 {
 	int level = 0;
-	traverseNode(dirpath, flags, level, fn);
+	if (traverseNode(dirpath, flags, level, fn) != 0) return -1;
 	return 0;
 }
 
-int main()
+int test(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
 {
+//	puts(fpath);
+	return 0;
+}
 
+int main(int argc, char *argv[])
+{
+	if (nftw(argv[1], test, 10, 0) != 0) puts("fail");
 }
