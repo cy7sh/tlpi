@@ -6,6 +6,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 
 enum
 {
@@ -88,8 +89,17 @@ int evaluateNode(const char *dirpath, int flags, int level, int (*fn) (const cha
 		.base = base,
 		.level = level
 	};
-	if (fn(dirpath, &sb, typeflag, &ftwbuf) != 0) {
-		return 1;
+	if (!(flags & FTW_CHDIR)) {
+		chdir(dirpath);
+		int fd = open(".", O_RDONLY);
+		if (fn(dirpath, &sb, typeflag, &ftwbuf) != 0) {
+			return 1;
+		}
+		fchdir(fd);
+	} else {
+		if (fn(dirpath, &sb, typeflag, &ftwbuf) != 0) {
+			return 1;
+		}
 	}
 	return 0;
 }
