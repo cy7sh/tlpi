@@ -52,6 +52,11 @@ void buildWatch(DIR *directory, char *pathPrefix)
 	}
 }
 
+void addToWatch(char *pathname)
+{
+
+}
+
 int findWatch(int wd)
 {
 	int index = -1;
@@ -80,11 +85,15 @@ void keepWatch(int log)
 			struct inotify_event *event = (struct inotify_event *) buf;
 			/* find where the event occurred */
 			int index = findWatch(event->wd);
-			char *pathname;
+			char pathname[PATH_MAX];
 			if (index == -1)
-				pathname = "(unknown)";
+				strcpy(pathname, "(unknown)");
 			else
-				pathname = watches[index].pathname;
+				strcpy(pathname, watches[index].pathname);
+			if (strlen(event->name) > 1) {
+				strcat(pathname, "/");
+				strcat(pathname, event->name);
+			}
 			if (event->mask & IN_ACCESS) dprintf(log, "%s: file was accessed\n", pathname);
 			if (event->mask & IN_ATTRIB) dprintf(log, "%s: file metadata changed\n", pathname);
 			if (event->mask & IN_CLOSE_WRITE) dprintf(log, "%s: file opened for writing was closed\n", pathname);
@@ -97,8 +106,8 @@ void keepWatch(int log)
 			if (event->mask & IN_MOVED_FROM) dprintf(log, "%s: file moved out of directory\n", pathname);
 			if (event->mask & IN_MOVED_TO) dprintf(log, "%s: file was moved into of directory\n", pathname);
 			if (event->mask & IN_OPEN) dprintf(log, "%s: file was opened\n", pathname);
-			p += sizeof(struct inotify_event) + event->len;
 			if (event->cookie > 0) dprintf(log, "cookie: %d\n", event->cookie);
+			p += sizeof(struct inotify_event) + event->len;
 		}
 	}
 }
