@@ -85,19 +85,20 @@ void keepWatch(int log)
 				pathname = "(unknown)";
 			else
 				pathname = watches[index].pathname;
-			if (event->mask & IN_ACCESS) dprintf(log, "%s: file was accessed", pathname);
-			if (event->mask & IN_ATTRIB) dprintf(log, "%s: file metadata changed", pathname);
-			if (event->mask & IN_CLOSE_WRITE) dprintf(log, "%s: file opened for writing was closed", pathname);
-			if (event->mask & IN_CLOSE_NOWRITE) dprintf(log, "%s: file opened read-only was closed", pathname);
-			if (event->mask & IN_CREATE) dprintf(log, "%s: file/directory created inside", pathname);
-			if (event->mask & IN_DELETE) dprintf(log, "%s: file/directory deleted inside", pathname);
-			if (event->mask & IN_DELETE_SELF) dprintf(log, "%s: file/directory was deleted", pathname);
-			if (event->mask & IN_MODIFY) dprintf(log, "%s: file was modified", pathname);
-			if (event->mask & IN_MOVE_SELF) dprintf(log, "%s: file/directory was moved", pathname);
-			if (event->mask & IN_MOVED_FROM) dprintf(log, "%s: file was accessed", pathname);
-			if (event->mask & IN_MOVED_TO) dprintf(log, "%s: file was moved out of directory", pathname);
-			if (event->mask & IN_OPEN) dprintf(log, "%s: file was opened", pathname);
+			if (event->mask & IN_ACCESS) dprintf(log, "%s: file was accessed\n", pathname);
+			if (event->mask & IN_ATTRIB) dprintf(log, "%s: file metadata changed\n", pathname);
+			if (event->mask & IN_CLOSE_WRITE) dprintf(log, "%s: file opened for writing was closed\n", pathname);
+			if (event->mask & IN_CLOSE_NOWRITE) dprintf(log, "%s: file opened read-only was closed\n", pathname);
+			if (event->mask & IN_CREATE) dprintf(log, "%s: file/directory created inside\n", pathname);
+			if (event->mask & IN_DELETE) dprintf(log, "%s: file/directory deleted inside\n", pathname);
+			if (event->mask & IN_DELETE_SELF) dprintf(log, "%s: file/directory was deleted\n", pathname);
+			if (event->mask & IN_MODIFY) dprintf(log, "%s: file was modified\n", pathname);
+			if (event->mask & IN_MOVE_SELF) dprintf(log, "%s: file/directory was moved\n", pathname);
+			if (event->mask & IN_MOVED_FROM) dprintf(log, "%s: file moved out of directory\n", pathname);
+			if (event->mask & IN_MOVED_TO) dprintf(log, "%s: file was moved into of directory\n", pathname);
+			if (event->mask & IN_OPEN) dprintf(log, "%s: file was opened\n", pathname);
 			p += sizeof(struct inotify_event) + event->len;
+			if (event->cookie > 0) dprintf(log, "cookie: %d\n", event->cookie);
 		}
 	}
 }
@@ -129,6 +130,6 @@ int main(int argc, char *argv[])
 	if (!strcmp(&pathPrefix[strlen(pathPrefix)-1], "/"))
 		pathPrefix[strlen(pathPrefix)-1] = '\0';
 	buildWatch(directory, pathPrefix);
-	dprintf(log, "watching %d directories\n", nextWatch-1);
+	dprintf(log, "watching %d directories\n", nextWatch);
 	keepWatch(log);
 }
