@@ -8,6 +8,7 @@
 #include <sys/inotify.h>
 
 #define MAX_WATCH 65536
+#define BUF_LEN (10 * (sizeof(struct inotify_event) + NAME_MAX +1))
 
 extern char *optarg;
 
@@ -51,6 +52,56 @@ void buildWatch(DIR *directory, char *pathPrefix)
 	}
 }
 
+int findWatch(int wd)
+{
+	int index = -1;
+	for (int i=nextWatch; i<nextWatch; i++) {
+		if (watches[i].wd == wd)
+			index = i;
+	}
+	return index;
+}
+
+void keepWatch(int log)
+{
+	char buf[BUF_LEN];
+	while(1) {
+		int numRead = read(inotify, buf, BUF_LEN);
+		if (numRead == 0) {
+			puts("fatal: read returned 0\n");
+			exit(EXIT_FAILURE);
+		}
+		if (numRead == -1) {
+			perror("read error");
+			exit(EXIT_FAILURE);
+		}
+		/* log events in buffer */
+		for (char *p = buf; p < buf + numRead;) {
+			struct inotify_event *event = (struct inotify_event *) buf;
+			/* find where the event occurred */
+			int index = findWatch(event->wd);
+			char *pathname;
+			if (index == -1)
+				pathname = "(unknown)";
+			else
+				pathname = watches[index].pathname;
+			if (event->mask & IN_ACCESS) dprintf(log, "%s: file was accessed", pathname);
+			if (event->mask & IN_ATTRIB) dprintf(log, "%s: file metadata changed", pathname);
+			if (event->mask & IN_CLOSE_WRITE) dprintf(log, "%s: file opened for writing was closed", pathname);
+			if (event->mask & IN_CLOSE_NOWRITE) dprintf(log, "%s: file opened read-only was closed", pathname);
+			if (event->mask & IN_CREATE) dprintf(log, "%s: file/directory created inside", pathname);
+			if (event->mask & IN_DELETE) dprintf(log, "%s: file/directory deleted inside", pathname);
+			if (event->mask & IN_DELETE_SELF) dprintf(log, "%s: file/directory was deleted", pathname);
+			if (event->mask & IN_MODIFY) dprintf(log, "%s: file was modified", pathname);
+			if (event->mask & IN_MOVE_SELF) dprintf(log, "%s: file/directory was moved", pathname);
+			if (event->mask & IN_MOVED_FROM) dprintf(log, "%s: file was accessed", pathname);
+			if (event->mask & IN_MOVED_TO) dprintf(log, "%s: file was moved out of directory", pathname);
+			if (event->mask & IN_OPEN) dprintf(log, "%s: file was opened", pathname);
+			p += sizeof(struct inotify_event) + event->len;
+		}
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	if (argc < 2 || !strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")) {
@@ -78,8 +129,6 @@ int main(int argc, char *argv[])
 	if (!strcmp(&pathPrefix[strlen(pathPrefix)-1], "/"))
 		pathPrefix[strlen(pathPrefix)-1] = '\0';
 	buildWatch(directory, pathPrefix);
-	/* check if watches are created */
-	for (int i=0; i<nextWatch; i++) {
-		printf("wd: %d pathname: %s\n", watches[i].wd, watches[i].pathname);
-	}
+	dprintf(log, "watching %d directories\n", nextWatch-1);
+	keepWatch(log);
 }
