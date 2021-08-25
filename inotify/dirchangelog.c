@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/inotify.h>
+#include <sys/stat.h>
 
 #define MAX_WATCH 65536
 #define BUF_LEN (10 * (sizeof(struct inotify_event) + NAME_MAX +1))
@@ -29,6 +30,10 @@ void buildWatch(DIR *directory, char *pathPrefix)
 	errno = 0;
 	struct dirent *dir;
 	int wd = inotify_add_watch(inotify, pathPrefix, IN_ALL_EVENTS);
+	if (wd == -1) {
+		printf("failed to add watch for %s: %s\n", pathPrefix, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
 	watches[nextWatch].wd = wd;
 	watches[nextWatch].pathname = pathPrefix;
 	nextWatch++;
@@ -52,9 +57,18 @@ void buildWatch(DIR *directory, char *pathPrefix)
 	}
 }
 
-void addToWatch(char *pathname)
+void addToWatch(char *path)
 {
-
+	char *pathname = malloc(PATH_MAX);
+	strcpy(pathname, path);
+	int wd = inotify_add_watch(inotify, pathname, IN_ALL_EVENTS);
+	if (wd == -1) {
+		printf("failed to add watch for %s: %s\n", pathname, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	watches[nextWatch].wd = wd;
+	watches[nextWatch].pathname = pathname;
+	nextWatch++;
 }
 
 int findWatch(int wd)
@@ -98,7 +112,20 @@ void keepWatch(int log)
 			if (event->mask & IN_ATTRIB) dprintf(log, "%s: file metadata changed\n", pathname);
 			if (event->mask & IN_CLOSE_WRITE) dprintf(log, "%s: file opened for writing was closed\n", pathname);
 			if (event->mask & IN_CLOSE_NOWRITE) dprintf(log, "%s: file opened read-only was closed\n", pathname);
-			if (event->mask & IN_CREATE) dprintf(log, "%s: file/directory created inside\n", pathname);
+			if (event->mask & IN_CREATE) {
+				struct stat statbuf;
+				if (stat(pathname, &statbuf) == -1) {
+					printf("failed to stat %s: %s\n", pathname, strerror(errno));
+					goto end;
+				}
+				if ((statbuf.st_mode & S_IFMT) == S_IFDIR) {
+					dprintf(log, "%s: directory created inside\n", pathname);
+					addToWatch(pathname);
+					dprintf(log, "%s: added to watch\n", pathname);
+				} else {
+					dprintf(log, "%s: file/directory created inside\n", pathname);
+				}
+			}
 			if (event->mask & IN_DELETE) dprintf(log, "%s: file/directory deleted inside\n", pathname);
 			if (event->mask & IN_DELETE_SELF) dprintf(log, "%s: file/directory was deleted\n", pathname);
 			if (event->mask & IN_MODIFY) dprintf(log, "%s: file was modified\n", pathname);
@@ -107,6 +134,7 @@ void keepWatch(int log)
 			if (event->mask & IN_MOVED_TO) dprintf(log, "%s: file was moved into of directory\n", pathname);
 			if (event->mask & IN_OPEN) dprintf(log, "%s: file was opened\n", pathname);
 			if (event->cookie > 0) dprintf(log, "cookie: %d\n", event->cookie);
+end:
 			p += sizeof(struct inotify_event) + event->len;
 		}
 	}
@@ -116,6 +144,7 @@ int main(int argc, char *argv[])
 {
 	if (argc < 2 || !strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")) {
 		printf("Usage: %s [-f <output file>] <directory>\n", argv[0]);
+		printf("\nWatch for changes in a direcotry and recursive subdirectories and log to a file or stdout. If a subdirectory is added after watch has started, it is watched too.\n");
 		exit(EXIT_SUCCESS);
 	}
 	inotify = inotify_init();
