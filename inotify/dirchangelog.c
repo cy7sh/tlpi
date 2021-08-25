@@ -28,6 +28,10 @@ void buildWatch(DIR *directory, char *pathPrefix)
 {
 	errno = 0;
 	struct dirent *dir;
+	int wd = inotify_add_watch(inotify, pathPrefix, IN_ALL_EVENTS);
+	watches[nextWatch].wd = wd;
+	watches[nextWatch].pathname = pathPrefix;
+	nextWatch++;
 	while ((dir = readdir(directory)) != NULL) {
 		if (errno != 0) {
 			perror("directory read error");
@@ -42,10 +46,6 @@ void buildWatch(DIR *directory, char *pathPrefix)
 			strcpy(pathname, pathPrefix);
 			strcat(pathname, "/");
 			strcat(pathname, dir->d_name);
-			int wd = inotify_add_watch(inotify, pathname, IN_ALL_EVENTS);
-			watches[nextWatch].wd = wd;
-			watches[nextWatch].pathname = pathname;
-			nextWatch++;
 			DIR *childDir = opendir(pathname);
 			buildWatch(childDir, pathname);
 		}
@@ -55,7 +55,7 @@ void buildWatch(DIR *directory, char *pathPrefix)
 int findWatch(int wd)
 {
 	int index = -1;
-	for (int i=nextWatch; i<nextWatch; i++) {
+	for (int i=0; i<nextWatch; i++) {
 		if (watches[i].wd == wd)
 			index = i;
 	}
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 		switch (opt) {
 			case 'f':
 				directory = opendir(argv[3]);
-				log = open(optarg, O_RDWR);
+				log = open(optarg, O_RDWR | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 				pathPrefix = argv[3];
 		}
 	}
