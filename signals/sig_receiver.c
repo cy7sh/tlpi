@@ -36,7 +36,8 @@ int main(int argc, char *argv[])
 	printf("%s: PID is %d\n", argv[0], getpid());
 	struct sigaction action = {
 		.sa_handler = handler,
-		.sa_mask = 0
+		.sa_mask = 0,
+		.sa_flags = 0
 	};
 	for (int i=1; i<NSIG; i++)
 		sigaction(i, &action, NULL);
