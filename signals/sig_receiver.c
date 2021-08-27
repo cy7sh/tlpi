@@ -34,8 +34,12 @@ void printSigset(const char *prefix, const sigset_t *sigset)
 int main(int argc, char *argv[])
 {
 	printf("%s: PID is %d\n", argv[0], getpid());
+	struct sigaction action = {
+		.sa_handler = handler,
+		.sa_mask = 0
+	};
 	for (int i=1; i<NSIG; i++)
-		signal(i, handler);
+		sigaction(i, &action, NULL);
 	if (argc>1)
 	{
 		sigset_t pendingMask, blockingMask, emptyMask;
