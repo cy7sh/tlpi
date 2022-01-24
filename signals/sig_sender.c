@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 	pid_t pid = atoi(argv[1]);
 	int numSigs = atoi(argv[2]);
 	int sig = atoi(argv[3]);
-	printf("%s: sending %d signal to process %d %d times\n", argv[0], sig, pid, numSigs);
+	printf("%s: sending %s(%d) signal to process %d %d times\n", argv[0], strsignal(sig), sig, pid, numSigs);
 	for (int i=0; i<numSigs; i++) {
 		if (kill(pid, sig) == -1) {
 			perror("kill error");
@@ -20,7 +20,9 @@ int main(int argc, char *argv[])
 		}
 	}
 	if (argc>4) {
-		if (kill(pid, atoi(argv[4])) == -1) {
+		sig = atoi(argv[4]);
+		printf("%s: sending %s(%d) signal to process %d\n", argv[0], strsignal(sig), sig, pid);
+		if (kill(pid, sig) == -1) {
 			perror("kill error");
 			return 1;
 		}
